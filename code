@@ -1,0 +1,59 @@
+# Importing Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from datetime import datetime
+
+# Load Dataset
+df = pd.read_csv('country_wise_latest.csv')
+
+# Data Cleaning
+df = df.fillna(0)  # Handle missing values by filling with 0
+df.drop_duplicates(inplace=True)  # Remove duplicates
+
+# Feature Engineering
+df['Mortality Rate'] = (df['Deaths'] / df['Confirmed']) * 100
+df['Recovery Rate'] = (df['Recovered'] / df['Confirmed']) * 100
+df['Active Cases'] = df['Confirmed'] - df['Deaths'] - df['Recovered']
+
+# EDA - Univariate Analysis
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Confirmed'], bins=50, kde=True)
+plt.title('Distribution of Confirmed Cases')
+plt.show()
+
+
+
+# Geospatial Analysis - Choropleth Map
+fig = px.choropleth(df,
+                    locations="Country/Region",
+                    locationmode="country names",
+                    color="Confirmed",
+                    hover_name="Country/Region",
+                    color_continuous_scale=px.colors.sequential.Plasma,
+                    title="Global Spread of COVID-19")
+fig.update_layout(template='plotly_dark')
+fig.show()
+
+# Clustering Analysis - K-Means Clustering
+features = ['Confirmed', 'Deaths', 'Recovered', 'Active Cases']
+df_cluster = df[features].copy()
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df_cluster)
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+df['Cluster'] = kmeans.fit_predict(df_scaled)
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=df, x='Confirmed', y='Deaths', hue='Cluster', palette='Set1')
+plt.title('K-Means Clustering of Countries')
+plt.show()
+
+# Conclusion and Documentation
+# - Summarize your findings
+# - Document the project in a Jupyter notebook
+
